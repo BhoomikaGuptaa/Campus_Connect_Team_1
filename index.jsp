@@ -71,3 +71,36 @@
         <a href="login.jsp">Login</a>
     </div>
 </nav>
+
+<%-- Hero section: big banner with tagline and Get Started button --%>
+<div class = "hero"> 
+	<h2>Discover SJSU Events</h2>
+	<p>Find hackathons, career fairs, workshops and more. </p>
+	<a href = "Login.jsp">Get Started</a>
+</div>
+
+<%-- Events section: table of upcoming events pulled from MySQL --%>
+<div class ="events">
+	<h3>Upcoming Events</h3>
+	<table>
+		<%-- Table Header row --%>
+		<tr> 
+			<th>Event</th>
+			<th>Category</th>
+			<th>Date</th>
+			<th>Location</th>
+			<th>Spots</th>
+			<th>Action</th>
+		</tr>
+<%-- Java scriptlet: connect to MySQL and query upcoming events --%>
+
+	
+	
+	
+	
+	
+	
+	
+	
+	</table>
+ </div>
