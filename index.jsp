@@ -65,17 +65,17 @@
 
 <%-- Navigation bar: logo on left, Home and Login links on right --%>
 <nav>
-    <h1>CampusConnect</h1>
+    <h1 style ="text-decorationL underline;">CampusConnect</h1>
     <div>
-        <a href="index.jsp">Home</a>
+        <a href="index.jsp"> Home  </a> 
         <a href="login.jsp">Login</a>
     </div>
 </nav>
 
 <%-- Hero section: big banner with tagline and Get Started button --%>
 <div class = "hero"> 
-	<h2>Discover SJSU Events</h2>
-	<p>Find hackathons, career fairs, workshops and more. </p>
+	<h2>🌐 DISCOVER SJSU EVENTS 🌟</h2>
+	<p>👨‍💻Find Hackathons, Career Fairs, Workshops and More👩‍💻 </p>
 	<a href = "Login.jsp">Get Started</a>
 </div>
 
@@ -92,15 +92,66 @@
 			<th>Spots</th>
 			<th>Action</th>
 		</tr>
-<%-- Java scriptlet: connect to MySQL and query upcoming events --%>
+<%-- connect to MySQL and query upcoming events --%>
+<%
+    /* Declare connection outside try block so we can close it in finally */
+    Connection con = null;
+    try {
+        /* Load the MySQL JDBC driver into memory */
+        Class.forName("com.mysql.cj.jdbc.Driver");
 
-	
-	
-	
-	
-	
-	
-	
-	
+        /* Open connection to campusconnect database on localhost */
+        con = DriverManager.getConnection(
+            "jdbc:mysql://localhost:3306/campusconnect?autoReconnect=true&useSSL=false",
+            "root", "1234Desa$");
+
+        /* Create a statement object to send SQL queries */
+        Statement stmt = con.createStatement();
+        /* Query: join events and categories tables, skip cancelled events, sort by date */
+        ResultSet rs = stmt.executeQuery(
+        		"SELECT e.title, e.location,e.event_date, e.capacity, c.name " +
+        		"FROM events e JOIN categories c ON e.category_id = c.category_id " + 
+        		"WHERE e.is_cancelled = 0 ORDER BY e.event_date ASC"); 
+        /* Loop through each row returned by the query */
+        while(rs.next()){
+%>
+ 			<%-- Print one table row per event --%>
+ 			<tr> 
+ 				<%-- Event title from events table --%>
+ 				<td><%= rs.getString("title") %></td>
+ 				<%-- Category name from categories table --%>
+ 				<td><%= rs.getString("name") %></td>
+                <%-- Trim timestamp to just date and time e.g. 2026-07-08 17:00 --%>
+                <td><%= rs.getTimestamp("event_date").toString().substring(0, 16) %></td>
+                <%-- Event location --%>
+                <td><%= rs.getString("location") %></td>
+                <%-- Max capacity (number of spots) --%>
+                <td><%= rs.getInt("capacity") %></td>
+                <%-- Sign Up link goes to login page --%>
+                <td><a href="login.jsp">Sign Up</a></td>
+            </tr>
+<%
+		}/* end while loop */ 
+        
+        /* Close result set and statement to free resources */
+        rs.close();
+        stmt.close();
+    } catch (Exception e) {
+        /* If anything goes wrong, print the error inside the table */
+        out.println("<tr><td colspan='6'>Error: " + e.getMessage() + "</td></tr>");
+
+    } finally {
+        /* Always close the connection, even if an error occurred */
+        if (con != null) try { con.close(); } catch (SQLException ex) {}
+    }
+   
+%>	
 	</table>
  </div>
+ <%-- Footer --%>
+<footer>
+    &copy; 2026 CampusConnect — San José State University
+</footer>
+
+</body>
+</html>
