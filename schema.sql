@@ -1,3 +1,4 @@
+CREATE DATABASE IF NOT EXISTS campusconnect;
 USE campusconnect;
 
 -- WARNING: This will drop and recreate all tables.
@@ -72,3 +73,8 @@ INSERT INTO events (organizer_id, category_id, title, description, location, eve
 (2, 2, 'Intro to Machine Learning', 'Hands-on workshop covering ML fundamentals with Python and scikit-learn.', 'MacQuarrie Hall 225', '2026-07-10 14:00:00', 40),
 (2, 5, 'Tech Networking Night', 'Meet fellow CS students and industry professionals over food and drinks.', 'Student Union Ballroom', '2026-07-18 18:00:00', 80),
 (2, 4, 'VSA General Meeting', 'Vietnamese Student Association weekly meeting. All welcome!', 'Clark Hall 100', '2026-07-08 17:00:00', 60);
+
+-- Optional seed signups so the homepage can show remaining spots properly
+INSERT INTO signups (student_id, event_id, status) VALUES
+(1, 1, 'registered'),
+(1, 3, 'registered');
