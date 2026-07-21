@@ -1,145 +1,102 @@
-# CampusConnect
+# CampusConnect - Tomcat 9 Compatible
 
-CS157A Database Management Systems — Team 1 Project
+This build uses javax.servlet and is compatible with Apache Tomcat 9.0.x.
 
-An event-based collaboration platform for SJSU students to browse and sign up for campus events, and connect with other attendees.
+# CampusConnect — polished code-review build
 
-**Team 1**
-- Bhoomika Gupta (Team Lead) — bhoomika.gupta@sjsu.edu
-- Frank Lin — frank.lin02@sjsu.edu
-- Brandon Phan — brandon.phan@sjsu.edu
+This build completes five proposal requirements:
 
----
+1. **FR1 User Authentication** — student registration, SJSU-email validation, BCrypt password hashing, login/logout, inactive-account check, 30-minute sessions.
+2. **FR2 Student Profile Management** — edit name, major, graduation year, bio, and skills.
+3. **FR4 Event Discovery** — browse and filter by keyword, category, exact date, and location; organizer and remaining capacity are shown.
+4. **FR5 Event Signup + Waitlist** — signup, duplicate prevention, cancellation, automatic waitlist, promotion, renumbering, and complete signup history.
+5. **FR7 Skill-Based Search** — browse students and filter public profiles by skill.
 
-## Tech Stack
+## Prerequisites
 
-| Layer | Technology |
-|---|---|
-| Frontend | HTML, CSS, JavaScript |
-| Backend | Java Servlets + JSP |
-| Web/App Server | Apache Tomcat 11 |
-| Database | MySQL Community Server |
-| Build Tool | Maven |
-| Password Hashing | jBCrypt |
+- JDK 17 or newer (`java -version`)
+- Maven 3.9+ (`mvn -version`)
+- MySQL Community Server 8+
+- Apache Tomcat 11
 
-See `requirements.txt` for exact versions.
+## Database setup
 
----
+1. Open MySQL Workbench.
+2. Open `schema.sql` and run the entire script.
+3. Set the database credentials as environment variables. **Do not put passwords in Git.**
 
-## Project Structure
+### Windows PowerShell
 
-```
-CampusConnect/
-├── src/main/java/
-│   ├── db/
-│   │   └── DBConnection.java       # shared DB connection helper
-│   └── servlets/
-│       ├── HomeServlet.java
-│       ├── LoginServlet.java
-│       ├── LogoutServlet.java
-│       ├── RegisterServlet.java
-│       └── SignupServlet.java      # event signup + cancel + waitlist logic
-├── src/main/webapp/
-│   ├── index.jsp                   # homepage — event listing, search/filter, signup actions
-│   ├── login.jsp
-│   ├── register.jsp
-│   ├── css/style.css
-│   └── WEB-INF/web.xml
-├── schema.sql                      # run this in MySQL Workbench first
-├── pom.xml
-└── README.md
+```powershell
+$env:CAMPUS_DB_USER="root"
+$env:CAMPUS_DB_PASSWORD="YOUR_MYSQL_PASSWORD"
+$env:CAMPUS_DB_URL="jdbc:mysql://localhost:3306/campus_connect?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Los_Angeles"
 ```
 
----
+These variables must be available to the process that starts Tomcat. For a permanent Windows setup, add them under **System Properties → Environment Variables**, then restart IntelliJ/Tomcat.
 
-## Setup Instructions
-
-### 1. Clone the repo
+### macOS/Linux
 
 ```bash
-git clone <repo-url>
-cd CampusConnect
+export CAMPUS_DB_USER=root
+export CAMPUS_DB_PASSWORD='YOUR_MYSQL_PASSWORD'
+export CAMPUS_DB_URL='jdbc:mysql://localhost:3306/campus_connect?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Los_Angeles'
 ```
 
-### 2. Set up the database
+## Build
 
-Open **MySQL Workbench**, connect to your local MySQL instance, and run the entire contents of `schema.sql` (it's a SQL script, not something you run through IntelliJ). This will:
-
-- Create the `campus_connect` database
-- Create all tables (`Users`, `Students`, `EventOrganizer`, `Administrator`, `Categories`, `Events`, `Signups`)
-- Insert seed data, including 3 demo accounts (see [Demo Accounts](#demo-accounts) below)
-
-> ⚠️ This script drops and recreates the database, so if you already have a `campus_connect` database with different data, back it up first.
-
-### 3. Set your local MySQL credentials
-
-Open `src/main/java/db/DBConnection.java` and update the password to **your own local MySQL root password**:
-
-```java
-private static final String PASSWORD = "YOUR_LOCAL_MYSQL_PASSWORD";
-```
-
-This is a per-developer setting. Everyone's local password will be different.
-
-### 4. Build the project
-
-In IntelliJ's terminal (or any terminal, **from the project root** — not the Tomcat folder):
+From the project root:
 
 ```bash
 mvn clean package
 ```
 
-Wait for `BUILD SUCCESS`. This produces `target/CampusConnect.war`.
+The deployable file will be:
 
-### 5. Deploy to Tomcat
+```text
+target/CampusConnect.war
+```
+
+## Deploy to Tomcat 11
+
+1. Stop Tomcat.
+2. Delete any old `CampusConnect.war` and old exploded `CampusConnect/` directory from Tomcat's `webapps` folder.
+3. Copy `target/CampusConnect.war` into `webapps`.
+4. Start Tomcat.
+5. Open `http://localhost:8080/CampusConnect/`.
+
+### Windows example
+
+```powershell
+cd C:\apache-tomcat-11\bin
+.\shutdown.bat
+copy C:\path\to\CampusConnect\target\CampusConnect.war C:\apache-tomcat-11\webapps\
+.\startup.bat
+```
+
+### macOS/Linux example
 
 ```bash
-# Stop Tomcat if it's already running
-cd /path/to/your/apache-tomcat-11.x/bin
-./shutdown.sh
-
-# Copy the fresh WAR into Tomcat's webapps folder
-# (delete the old exploded CampusConnect/ folder in webapps first, if present)
-cp /path/to/CampusConnect/target/CampusConnect.war /path/to/your/apache-tomcat-11.x/webapps/
-
-# Start Tomcat again
-./startup.sh
+$CATALINA_HOME/bin/shutdown.sh
+rm -rf $CATALINA_HOME/webapps/CampusConnect $CATALINA_HOME/webapps/CampusConnect.war
+cp target/CampusConnect.war $CATALINA_HOME/webapps/
+$CATALINA_HOME/bin/startup.sh
 ```
 
-### 6. Open the site
+## Demo accounts
 
-```
-http://localhost:8080/CampusConnect/index.jsp
-```
+All demo passwords are `Password123!`.
 
----
+- Student: `brandon.phan@sjsu.edu`
+- Student: `frank.lin02@sjsu.edu`
+- Organizer seed account: `organizer@sjsu.edu`
+- Administrator seed account: `admin@sjsu.edu`
 
-## Demo Accounts
+The current five-requirement UI focuses on student workflows. Organizer and administrator dashboards remain future work.
 
-Seeded by `schema.sql`. Password for all three is **`Password123!`**
+## Suggested demo
 
-| Email | Role |
-|---|---|
-| brandon.phan@sjsu.edu | Student |
-| organizer@sjsu.edu | Event Organizer |
-| admin@sjsu.edu | Administrator |
+Register a new account → log in → update profile and skills → filter events by category/date/location → join an open event → join a full event to demonstrate waitlisting → open My Events → cancel a registration → search students by skill.
 
-You can also register a new student account directly from the site (`register.jsp`) — must use an `@sjsu.edu` email and a password of at least 8 characters.
-
----
-
-## What's Implemented So Far
-
-- **FR1 — User Authentication**: register, login, logout, session management, bcrypt password hashing
-- **FR4 — Event Discovery**: keyword search, category filter, location filter, live spots-left calculation
-- **FR5 — Event Signup**: students can sign up for events (auto-registered or auto-waitlisted based on capacity), cancel their signup at any time, and cancelling a *registered* spot automatically promotes the first person on the waitlist. Waitlist positions are renumbered so they stay contiguous after any cancellation.
-
-Everything else (connections, skills, admin tools, notifications) is planned for upcoming milestones.
-
----
-
-## Database Design Notes
-
-- Users are modeled with the **ISA / E-R separation method**: a shared `Users` table holds common attributes, and `Students`, `EventOrganizer`, `Administrator` are separate subclass tables keyed by `User_ID`. There's no `Role` column — a user's role is determined by which subclass table their `User_ID` appears in.
-- 1:N relationships (e.g. an organizer to their events) are implemented as foreign key columns on the "many" side (e.g. `Events.Organizer_ID`), not as separate join tables. Only genuine M:N relationships get their own join table.
-
+## Updated public homepage
+The public homepage now shows simple upcoming-event banners only. Full event categories, descriptions, capacity, search filters, and signup controls are available after login on `events.jsp`.
