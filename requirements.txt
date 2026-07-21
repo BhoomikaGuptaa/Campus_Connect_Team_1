@@ -1,0 +1,28 @@
+# CampusConnect — Environment Requirements
+#
+# This is a Java/Maven project, not a Python project, so there's no pip
+# install step. This file just lists the tools and versions you need
+# installed on your machine before you can build and run the site.
+# Library dependencies (MySQL connector, jBCrypt, etc.) are managed by
+# Maven automatically via pom.xml — you don't need to install those by hand.
+
+# --- Required software ---
+Java JDK          17 or later      (Jakarta Servlet 6.0 / Tomcat 11 require Java 17+)
+Apache Maven      3.9 or later
+Apache Tomcat     11.0.x
+MySQL             8.0.x (MySQL Community Server)
+MySQL Workbench   8.0.x            (to run schema.sql)
+
+# --- Recommended IDE ---
+IntelliJ IDEA     Ultimate Edition (any recent 2024/2025 build)
+
+# --- Key Maven dependencies (already declared in pom.xml, no action needed) ---
+jakarta.servlet.jsp-api   3.1.0   (provided scope)
+mysql-connector-j         8.3.0
+org.mindrot:jbcrypt       0.4     (bcrypt password hashing)
+
+# --- Before running ---
+# 1. Run schema.sql in MySQL Workbench to create the campus_connect database.
+# 2. Edit src/main/java/db/DBConnection.java and set your own local MySQL
+#    root password (this is per-developer, do not commit your real password).
+# 3. See README.md for full build + deploy steps.

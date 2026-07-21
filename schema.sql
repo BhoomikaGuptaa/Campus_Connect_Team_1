@@ -1,80 +1,56 @@
-CREATE DATABASE IF NOT EXISTS campusconnect;
-USE campusconnect;
+DROP DATABASE IF EXISTS campus_connect;
+CREATE DATABASE campus_connect CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE campus_connect;
 
--- WARNING: This will drop and recreate all tables.
--- Run this to set up a fresh database or reset to seed data.
-DROP TABLE IF EXISTS signups;
-DROP TABLE IF EXISTS events;
-DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS users;
-
--- Users table
-CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(100) NOT NULL,
-    role VARCHAR(20) DEFAULT 'student',
-    major VARCHAR(100),
-    grad_year INT,
-    bio TEXT,
-    is_active TINYINT(1) DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE Users (
+ User_ID INT AUTO_INCREMENT PRIMARY KEY, First_Name VARCHAR(50) NOT NULL, Last_Name VARCHAR(50) NOT NULL,
+ Email VARCHAR(100) NOT NULL UNIQUE, Password VARCHAR(255) NOT NULL, Is_Active BOOLEAN NOT NULL DEFAULT TRUE,
+ Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Categories table
-CREATE TABLE categories (
-    category_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
+CREATE TABLE Students (
+ User_ID INT PRIMARY KEY, Major VARCHAR(100), Grad_Year INT, Bio VARCHAR(500),
+ CONSTRAINT fk_student_user FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
 );
-
--- Events table
-CREATE TABLE events (
-    event_id INT AUTO_INCREMENT PRIMARY KEY,
-    organizer_id INT NOT NULL,
-    category_id INT,
-    title VARCHAR(150) NOT NULL,
-    description TEXT,
-    location VARCHAR(150),
-    event_date DATETIME NOT NULL,
-    capacity INT NOT NULL DEFAULT 50,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_cancelled TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (organizer_id) REFERENCES users(user_id),
-    FOREIGN KEY (category_id) REFERENCES categories(category_id)
+CREATE TABLE EventOrganizer (User_ID INT PRIMARY KEY, CONSTRAINT fk_org_user FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE);
+CREATE TABLE Administrator (User_ID INT PRIMARY KEY, CONSTRAINT fk_admin_user FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE);
+CREATE TABLE Categories (Category_ID INT AUTO_INCREMENT PRIMARY KEY, Name VARCHAR(50) NOT NULL UNIQUE);
+CREATE TABLE Skills (Skill_ID INT AUTO_INCREMENT PRIMARY KEY, Name VARCHAR(60) NOT NULL UNIQUE);
+CREATE TABLE HasSkill (
+ User_ID INT NOT NULL, Skill_ID INT NOT NULL, PRIMARY KEY(User_ID, Skill_ID),
+ FOREIGN KEY(User_ID) REFERENCES Students(User_ID) ON DELETE CASCADE,
+ FOREIGN KEY(Skill_ID) REFERENCES Skills(Skill_ID) ON DELETE CASCADE
 );
-
--- Signups table
-CREATE TABLE signups (
-    signup_id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id INT NOT NULL,
-    event_id INT NOT NULL,
-    status VARCHAR(20) DEFAULT 'registered',
-    waitlist_position INT DEFAULT NULL,
-    signed_up_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_signup (student_id, event_id),
-    FOREIGN KEY (student_id) REFERENCES users(user_id),
-    FOREIGN KEY (event_id) REFERENCES events(event_id)
+CREATE TABLE Events (
+ Event_ID INT AUTO_INCREMENT PRIMARY KEY, Organizer_ID INT NOT NULL, Category_ID INT NOT NULL,
+ Title VARCHAR(150) NOT NULL, Description TEXT, Location VARCHAR(150) NOT NULL, Event_Date DATETIME NOT NULL,
+ Capacity INT NOT NULL CHECK(Capacity > 0), Is_Cancelled BOOLEAN NOT NULL DEFAULT FALSE, Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(Organizer_ID) REFERENCES EventOrganizer(User_ID), FOREIGN KEY(Category_ID) REFERENCES Categories(Category_ID)
 );
-
--- Seed data
-INSERT INTO categories (name) VALUES
-('Hackathon'), ('Workshop'), ('Career Fair'),
-('Club Meeting'), ('Networking'), ('Social');
-
-INSERT INTO users (email, password_hash, full_name, role, major, grad_year) VALUES
-('brandon.phan@sjsu.edu', 'password123', 'Brandon Phan', 'student', 'Computer Science', 2027),
-('organizer@sjsu.edu', 'password123', 'SJSU Events', 'organizer', NULL, NULL),
-('admin@sjsu.edu', 'password123', 'Admin User', 'admin', NULL, NULL);
-
-INSERT INTO events (organizer_id, category_id, title, description, location, event_date, capacity) VALUES
-(2, 1, 'SpartaHack 2026', 'SJSU''s annual 24-hour hackathon. Build something awesome!', 'Engineering Building, Rm 285', '2026-07-15 09:00:00', 100),
-(2, 3, 'Summer Career Fair', 'Connect with 50+ companies hiring SJSU students for internships and full-time roles.', 'Event Center', '2026-07-22 10:00:00', 300),
-(2, 2, 'Intro to Machine Learning', 'Hands-on workshop covering ML fundamentals with Python and scikit-learn.', 'MacQuarrie Hall 225', '2026-07-10 14:00:00', 40),
-(2, 5, 'Tech Networking Night', 'Meet fellow CS students and industry professionals over food and drinks.', 'Student Union Ballroom', '2026-07-18 18:00:00', 80),
-(2, 4, 'VSA General Meeting', 'Vietnamese Student Association weekly meeting. All welcome!', 'Clark Hall 100', '2026-07-08 17:00:00', 60);
-
--- Optional seed signups so the homepage can show remaining spots properly
-INSERT INTO signups (student_id, event_id, status) VALUES
-(1, 1, 'registered'),
-(1, 3, 'registered');
+CREATE TABLE Signups (
+ Signup_ID INT AUTO_INCREMENT PRIMARY KEY, Student_ID INT NOT NULL, Event_ID INT NOT NULL,
+ Status ENUM('registered','waitlisted','cancelled') NOT NULL DEFAULT 'registered', Waitlist_Position INT NULL,
+ Signed_Up_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uq_signup(Student_ID, Event_ID),
+ FOREIGN KEY(Student_ID) REFERENCES Students(User_ID) ON DELETE CASCADE,
+ FOREIGN KEY(Event_ID) REFERENCES Events(Event_ID) ON DELETE CASCADE,
+ INDEX idx_event_status(Event_ID, Status), INDEX idx_waitlist(Event_ID, Status, Waitlist_Position)
+);
+INSERT INTO Categories(Name) VALUES ('Hackathon'),('Workshop'),('Career Fair'),('Club Meeting'),('Networking'),('Social');
+INSERT INTO Skills(Name) VALUES ('Python'),('Java'),('Data Analysis'),('Machine Learning'),('UI/UX Design'),('Web Development'),('Cloud Computing'),('Public Speaking'),('Project Management'),('Graphic Design');
+-- Password for all demo accounts: Password123!
+INSERT INTO Users(First_Name,Last_Name,Email,Password) VALUES
+('Brandon','Phan','brandon.phan@sjsu.edu','$2a$10$o1A6d45IdvdbikT2Pz1bTeKAjT8t8sKeXFYzLQPYqNQkCzM.y1Usq'),
+('Frank','Lin','frank.lin02@sjsu.edu','$2a$10$o1A6d45IdvdbikT2Pz1bTeKAjT8t8sKeXFYzLQPYqNQkCzM.y1Usq'),
+('SJSU','Events','organizer@sjsu.edu','$2a$10$o1A6d45IdvdbikT2Pz1bTeKAjT8t8sKeXFYzLQPYqNQkCzM.y1Usq'),
+('Admin','User','admin@sjsu.edu','$2a$10$o1A6d45IdvdbikT2Pz1bTeKAjT8t8sKeXFYzLQPYqNQkCzM.y1Usq');
+INSERT INTO Students(User_ID,Major,Grad_Year,Bio) VALUES
+(1,'Computer Science',2027,'Interested in full-stack development and hackathons.'),
+(2,'Data Science',2027,'Learning machine learning and looking for project teammates.');
+INSERT INTO EventOrganizer VALUES(3); INSERT INTO Administrator VALUES(4);
+INSERT INTO HasSkill VALUES (1,2),(1,6),(1,7),(2,1),(2,3),(2,4);
+INSERT INTO Events(Organizer_ID,Category_ID,Title,Description,Location,Event_Date,Capacity) VALUES
+(3,4,'VSA General Meeting','Vietnamese Student Association weekly meeting. Everyone is welcome!','Clark Hall 100','2026-07-28 17:00:00',60),
+(3,2,'Intro to Machine Learning','Hands-on workshop covering ML fundamentals with Python and scikit-learn.','MacQuarrie Hall 225','2026-07-30 14:00:00',2),
+(3,1,'SpartaHack 2026','SJSU annual 24-hour hackathon. Build something awesome!','Engineering Building, Room 285','2026-08-05 09:00:00',100),
+(3,5,'Tech Networking Night','Meet fellow students and industry professionals over food and drinks.','Student Union Ballroom','2026-08-08 18:00:00',80),
+(3,3,'Summer Career Fair','Connect with companies hiring SJSU students for internships and full-time roles.','Event Center','2026-08-12 10:00:00',300);
+INSERT INTO Signups(Student_ID,Event_ID,Status) VALUES (1,1,'registered'),(1,4,'registered'),(2,2,'registered');
