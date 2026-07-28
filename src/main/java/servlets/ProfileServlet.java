@@ -1,5 +1,5 @@
 package servlets;
-import db.DBConnection; import javax.servlet.*; import javax.servlet.annotation.WebServlet; import javax.servlet.http.*; import java.io.*; import java.sql.*; import java.util.*;
+import db.DBConnection; import jakarta.servlet.*; import jakarta.servlet.annotation.WebServlet; import jakarta.servlet.http.*; import java.io.*; import java.sql.*; import java.util.*;
 @WebServlet("/profile") public class ProfileServlet extends HttpServlet {
  protected void doGet(HttpServletRequest req,HttpServletResponse resp)throws ServletException,IOException{
   HttpSession session=req.getSession(false); Integer uid=session==null?null:(Integer)session.getAttribute("userId"); if(uid==null){resp.sendRedirect("login.jsp");return;}
