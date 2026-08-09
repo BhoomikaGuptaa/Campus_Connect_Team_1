@@ -18,13 +18,10 @@ import jakarta.servlet.http.HttpSession;
 
 import db.DBConnection;
 
-// This servlet covers FR3, Event Management for Event Organizers.
-// One servlet handles four different actions: create, edit, cancel,
+// FR3 — Event Management for Event Organizers.
+// This servlet handles four different actions: create, edit, cancel,
 // and viewing the attendee list. I split the work by reading an
-// "action" parameter instead of writing four separate servlets,
-// because all four actions are really just different things you
-// can do to the same Events table, so it makes sense to keep them
-// together in one place.
+// "action" parameter.
 
 @WebServlet("/event")
 public class EventServlet extends HttpServlet {
@@ -35,16 +32,14 @@ public class EventServlet extends HttpServlet {
 
         // Every action here needs the person to be logged in as an
         // organizer, so I check the session first before doing
-        // anything else. If there is no session, or the session
-        // doesn't have a User_ID in it, I send them back to the
-        // login page instead of letting the request go through.
+        // anything else.
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("User_ID") == null) {
+        if (session == null || session.getAttribute("userId") == null) {
             response.sendRedirect("login.jsp");
             return;
         }
 
-        int organizerId = (int) session.getAttribute("User_ID");
+        int organizerId = (int) session.getAttribute("userId");
         String action = request.getParameter("action");
 
         try {
@@ -57,14 +52,12 @@ public class EventServlet extends HttpServlet {
             } else {
                 // If the action parameter is missing or doesn't match
                 // anything I know how to handle, I treat it as a bad
-                // request instead of silently doing nothing.
+                // request.
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unknown action.");
             }
         } catch (SQLException e) {
-            // I wrap SQL exceptions in a ServletException so the
-            // container's error handling takes over. Letting the raw
-            // SQLException escape would expose database details to
-            // whatever is looking at the stack trace.
+            // Wrap SQL exceptions in a ServletException so the
+            // container's error handling takes over.
             throw new ServletException("Database error in EventServlet.", e);
         }
     }
@@ -74,12 +67,12 @@ public class EventServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("User_ID") == null) {
+        if (session == null || session.getAttribute("userId") == null) {
             response.sendRedirect("login.jsp");
             return;
         }
 
-        int organizerId = (int) session.getAttribute("User_ID");
+        int organizerId = (int) session.getAttribute("userId");
         String action = request.getParameter("action");
 
         try {
@@ -109,14 +102,13 @@ public class EventServlet extends HttpServlet {
 
         // Capacity has to be a positive number for the event to make
         // sense, so I check it here before it ever reaches the
-        // database. The Events table also has a CHECK constraint for
-        // this, but catching the problem early means I can send the
-        // organizer back a clear message instead of a database error.
+        // database.
         if (capacity <= 0) {
             request.setAttribute("errorMessage", "Capacity must be greater than zero.");
             request.getRequestDispatcher("create-event.jsp").forward(request, response);
             return;
         }
+
 
         String sql = "INSERT INTO Events "
                 + "(Organizer_ID, Category_ID, Title, Description, Location, Event_Date, Capacity) "
@@ -148,12 +140,7 @@ public class EventServlet extends HttpServlet {
 
         int eventId = Integer.parseInt(request.getParameter("eventId"));
 
-        // Before I touch anything, I confirm this organizer actually
-        // owns the event they're trying to edit. This matches what the
-        // proposal says: an organizer cannot edit someone else's
-        // event. If ownership fails, I stop here and send back a
-        // 403 instead of quietly doing nothing, so the organizer
-        // actually knows their request was blocked.
+        // Confirm this organizer actually owns the event they're trying to edit.
         if (!organizerOwnsEvent(eventId, organizerId)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not own this event.");
             return;
@@ -202,11 +189,9 @@ public class EventServlet extends HttpServlet {
             return;
         }
 
-        // This sets Is_Cancelled to TRUE instead of deleting the row.
+        // Sets Is_Cancelled to TRUE.
         // I want to keep cancelled events around in the database so
-        // students who signed up can still see the event was
-        // cancelled, and so the Signups rows tied to this event don't
-        // get orphaned by a foreign key problem.
+        // students who signed up can still see the event was cancelled.
         String sql = "UPDATE Events SET Is_Cancelled = TRUE WHERE Event_ID = ? AND Organizer_ID = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -237,18 +222,17 @@ public class EventServlet extends HttpServlet {
             return;
         }
 
-        String sql = "SELECT Users.First_Name, Users.Last_Name, Users.Email, "
-                + "Signups.Status, Signups.Signed_Up_At "
-                + "FROM Events "
-                + "JOIN Signups ON Events.Event_ID = Signups.Event_ID "
-                + "JOIN Users ON Signups.Student_ID = Users.User_ID "
-                + "WHERE Events.Event_ID = ? AND Events.Organizer_ID = ? AND Signups.Status = 'registered' "
-                + "ORDER BY Signups.Signed_Up_At";
 
-        // This list holds the finished, plain Java objects. I build it
-        // up while the Connection is still open, so by the time I reach
-        // the JSP, all the data I need is already sitting safely in
-        // memory and doesn't depend on the database connection anymore.
+        String sql = "SELECT u.First_Name, u.Last_Name, u.Email, sg.Status, sg.Signed_Up_At "
+                + "FROM Events e, Signups sg, Users u "
+                + "WHERE e.Event_ID = sg.Event_ID "
+                + "  AND sg.Student_ID = u.User_ID "
+                + "  AND e.Event_ID = ? "
+                + "  AND e.Organizer_ID = ? "
+                + "  AND sg.Status = 'registered' "
+                + "ORDER BY sg.Signed_Up_At";
+
+
         List<Attendee> attendees = new ArrayList<>();
 
         try (Connection conn = DBConnection.getConnection();
@@ -258,8 +242,7 @@ public class EventServlet extends HttpServlet {
             stmt.setInt(2, organizerId);
 
             try (ResultSet rs = stmt.executeQuery()) {
-                // I read every row here, while rs and conn are both
-                // still open, and copy each row into an Attendee object.
+                // Read every row here and copy each row into an Attendee object.
                 while (rs.next()) {
                     Attendee attendee = new Attendee(
                             rs.getString("First_Name"),
@@ -272,18 +255,14 @@ public class EventServlet extends HttpServlet {
                 }
             }
         }
-        // By this point the try-with-resources block has already closed
-        // the Connection, PreparedStatement, and ResultSet. That's fine,
-        // because I don't need any of them anymore, everything I need
-        // is now inside the attendees list.
 
         request.setAttribute("attendees", attendees);
-        request.getRequestDispatcher("attendees.jsp").forward(request, response);
+        request.getRequestDispatcher("organizer-attendees.jsp").forward(request, response);
     }
 
 
     // ------------------------------------------------------------
-    // Shared helper: checks if this organizer actually owns this event
+    // Checks if this organizer actually owns this event
     // ------------------------------------------------------------
     // Both editEvent and cancelEvent need this same check, and
     // viewAttendees needs it too, so instead of copying the same

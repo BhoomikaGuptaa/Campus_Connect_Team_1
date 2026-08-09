@@ -18,12 +18,12 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 
 <%
-    // Data handed over by the servlet.
+    // Get the event list that MyEventsServlet already queried and packaged.
     List<Map<String, Object>> events =
             (List<Map<String, Object>>) request.getAttribute("events");
 
-    // Flash messages are read once and then removed, so they show on this
-    // page load only and do not reappear when the user refreshes.
+    // Read the flash messages once and remove them right away, so they
+    // only show on this page load and dont reappear on a refresh.
     Object flashSuccess = session.getAttribute("flashSuccess");
     Object flashError   = session.getAttribute("flashError");
     session.removeAttribute("flashSuccess");
@@ -109,8 +109,8 @@
                 <%
                     for (Map<String, Object> event : events) {
 
-                        // Status drives both the badge colour and which
-                        // actions are offered in the last column.
+                        // Use the status to decide both the badge colour
+                        // and which actions to offer in the last column.
                         String status = String.valueOf(event.get("Status"));
                 %>
 

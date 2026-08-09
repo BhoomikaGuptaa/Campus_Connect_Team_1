@@ -17,6 +17,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 
+/**
+ * FR1 — User Authentication (registration).
+ * I create a new account by inserting one row into Users and one matching
+ * row into Students, since self-registration always makes a Student account
+ * under the ISA subclass design. Organizer access comes later through an
+ * admin-approved OrganizerRequest, not through this form.
+ */
 @WebServlet("/register")
 public class RegisterServlet extends HttpServlet {
 
@@ -24,13 +31,14 @@ public class RegisterServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String firstName     = request.getParameter("firstName");
-        String lastName      = request.getParameter("lastName");
-        String email          = request.getParameter("email");
-        String password       = request.getParameter("password");
-        String majorParam     = request.getParameter("major");
-        String gradYearParam  = request.getParameter("gradYear");
+        String firstName    = request.getParameter("firstName");
+        String lastName     = request.getParameter("lastName");
+        String email         = request.getParameter("email");
+        String password      = request.getParameter("password");
+        String majorParam    = request.getParameter("major");
+        String gradYearParam = request.getParameter("gradYear");
 
+        // Check the required fields and enforce a minimum password length.
         if (firstName == null || firstName.trim().isEmpty() ||
                 lastName == null || lastName.trim().isEmpty() ||
                 email == null || email.trim().isEmpty() ||
@@ -40,6 +48,7 @@ public class RegisterServlet extends HttpServlet {
             return;
         }
 
+        // Only allow SJSU emails to sign up.
         if (!email.toLowerCase().endsWith("@sjsu.edu")) {
             request.setAttribute("error", "Please register with your SJSU email address.");
             request.getRequestDispatcher("register.jsp").forward(request, response);
@@ -48,12 +57,11 @@ public class RegisterServlet extends HttpServlet {
 
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(10));
 
-        // Self-registration always creates a Student account (ISA subclass).
-        // Organizer access is granted later through an admin-approved OrganizerRequest.
-        String checkSql          = "SELECT User_ID FROM Users WHERE Email = ?";
-        String insertUserSql     = "INSERT INTO Users (First_Name, Last_Name, Email, Password, Is_Active) VALUES (?, ?, ?, ?, 1)";
-        String insertStudentSql  = "INSERT INTO Students (User_ID, Major, Grad_Year) VALUES (?, ?, ?)";
+        String checkSql         = "SELECT User_ID FROM Users WHERE Email = ?";
+        String insertUserSql    = "INSERT INTO Users (First_Name, Last_Name, Email, Password, Is_Active) VALUES (?, ?, ?, ?, 1)";
+        String insertStudentSql = "INSERT INTO Students (User_ID, Major, Grad_Year) VALUES (?, ?, ?)";
 
+        // Only keep the grad year if it parses as a real number.
         Integer gradYear = null;
         if (gradYearParam != null && !gradYearParam.trim().isEmpty()) {
             try {
@@ -61,9 +69,12 @@ public class RegisterServlet extends HttpServlet {
             } catch (NumberFormatException ignored) {}
         }
 
-        try (Connection con = DBConnection.getConnection()) {
+        Connection con = null;
 
-            // Reject duplicate emails
+        try {
+            con = DBConnection.getConnection();
+
+            // Reject the request if this email is already registered.
             try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
                 checkStmt.setString(1, email.trim());
                 try (ResultSet rs = checkStmt.executeQuery()) {
@@ -75,8 +86,8 @@ public class RegisterServlet extends HttpServlet {
                 }
             }
 
-            // Insert into Users (superclass) then Students (subclass) as ONE transaction —
-            // both rows must exist together, or neither should.
+            // Insert Users and Students together as one transaction — both
+            // rows need to exist together, or neither should.
             con.setAutoCommit(false);
             int newUserId;
 
@@ -88,6 +99,7 @@ public class RegisterServlet extends HttpServlet {
                 insertUserStmt.setString(4, hashedPassword);
                 insertUserStmt.executeUpdate();
 
+                // Read back the auto-generated User_ID so I can use it below.
                 try (ResultSet keys = insertUserStmt.getGeneratedKeys()) {
                     keys.next();
                     newUserId = keys.getInt(1);
@@ -108,11 +120,31 @@ public class RegisterServlet extends HttpServlet {
             con.commit();
 
         } catch (SQLException e) {
+            // Roll back if anything failed partway through, so I never end
+            // up with a Users row that has no matching Students row.
+            if (con != null) {
+                try {
+                    con.rollback();
+                } catch (SQLException rollbackEx) {
+
+                }
+            }
             request.setAttribute("error", "Something went wrong creating your account. Please try again.");
             request.getRequestDispatcher("register.jsp").forward(request, response);
             return;
+
+        } finally {
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException closeEx) {
+                    // Ignore a failure to close here since the request is
+                    // already finishing one way or another.
+                }
+            }
         }
 
         response.sendRedirect("login.jsp?registered=true");
     }
 }
+
