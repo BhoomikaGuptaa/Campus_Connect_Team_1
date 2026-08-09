@@ -17,20 +17,17 @@ CREATE TABLE Students (
     Major VARCHAR(100),
     Grad_Year INT,
     Bio VARCHAR(500),
-    CONSTRAINT fk_student_user
-        FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
+    FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
 );
 
 CREATE TABLE EventOrganizer (
     User_ID INT PRIMARY KEY,
-    CONSTRAINT fk_org_user
-        FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
+    FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
 );
 
 CREATE TABLE Administrator (
     User_ID INT PRIMARY KEY,
-    CONSTRAINT fk_admin_user
-        FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
+    FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
 );
 
 CREATE TABLE Categories (
@@ -80,7 +77,36 @@ CREATE TABLE Signups (
     INDEX idx_waitlist (Event_ID, Status, Waitlist_Position)
 );
 
--- FR10: users can request organizer access and an admin reviews the request.
+-- FR6
+CREATE TABLE Connections (
+    Connection_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Sender_ID INT NOT NULL,
+    Receiver_ID INT NOT NULL,
+    Event_ID INT NULL,
+    Status ENUM('pending', 'accepted', 'declined') NOT NULL DEFAULT 'pending',
+    Message VARCHAR(500),
+    Purpose ENUM('Find a Teammate', 'Networking', 'Carpooling', 'Skill Match'),
+    Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_connection (Sender_ID, Receiver_ID, Event_ID),
+    FOREIGN KEY (Sender_ID) REFERENCES Students(User_ID) ON DELETE CASCADE,
+    FOREIGN KEY (Receiver_ID) REFERENCES Students(User_ID) ON DELETE CASCADE,
+    FOREIGN KEY (Event_ID) REFERENCES Events(Event_ID) ON DELETE CASCADE,
+    INDEX idx_incoming (Receiver_ID, Status)
+);
+
+-- FR8
+CREATE TABLE Notifications (
+    Notification_ID INT AUTO_INCREMENT PRIMARY KEY,
+    User_ID INT NOT NULL,
+    Message VARCHAR(500) NOT NULL,
+    Type ENUM('Signup_Confirmed', 'Waitlist_Promoted', 'Connection_Received', 'Connection_Accepted') NOT NULL,
+    Is_Read BOOLEAN NOT NULL DEFAULT FALSE,
+    Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE,
+    INDEX idx_unread (User_ID, Is_Read)
+);
+
+-- FR9
 CREATE TABLE OrganizerRequests (
     Request_ID INT AUTO_INCREMENT PRIMARY KEY,
     User_ID INT NOT NULL,
@@ -90,7 +116,7 @@ CREATE TABLE OrganizerRequests (
     FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
 );
 
--- FR10: saves a record of each administrator action.
+-- FR9
 CREATE TABLE ActivityLogs (
     Log_ID INT AUTO_INCREMENT PRIMARY KEY,
     Admin_ID INT NOT NULL,
@@ -135,8 +161,11 @@ INSERT INTO Students (User_ID, Major, Grad_Year, Bio) VALUES
 (2, 'Data Science', 2027, 'Learning machine learning and looking for project teammates.'),
 (5, 'Software Engineering', 2028, 'Interested in Java, web development, and campus projects.');
 
-INSERT INTO EventOrganizer (User_ID) VALUES (3);
-INSERT INTO Administrator (User_ID) VALUES (4);
+INSERT INTO EventOrganizer (User_ID) VALUES
+(3);
+
+INSERT INTO Administrator (User_ID) VALUES
+(4);
 
 INSERT INTO HasSkill (User_ID, Skill_ID) VALUES
 (1, 2),
@@ -165,3 +194,13 @@ INSERT INTO Signups (Student_ID, Event_ID, Status) VALUES
 
 INSERT INTO OrganizerRequests (User_ID, Status) VALUES
 (6, 'Pending');
+
+INSERT INTO Connections
+(Sender_ID, Receiver_ID, Event_ID, Status, Message, Purpose)
+VALUES
+(1, 2, 1, 'pending', 'Want to connect for the event?', 'Networking');
+
+INSERT INTO Notifications
+(User_ID, Message, Type, Is_Read)
+VALUES
+(2, 'Brandon Phan sent you a connection request.', 'Connection_Received', FALSE);
