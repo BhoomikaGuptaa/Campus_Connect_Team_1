@@ -165,3 +165,4 @@ INSERT INTO Signups (Student_ID, Event_ID, Status) VALUES
 
 INSERT INTO OrganizerRequests (User_ID, Status) VALUES
 (6, 'Pending');
+
