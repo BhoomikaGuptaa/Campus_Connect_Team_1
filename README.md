@@ -75,45 +75,57 @@ The final database contains 13 tables:
 - Notifications
 
 ---
----
-
 ## Project Structure
 
 ```text
-CampusConnect/
-├── src/main/java/
-│   ├── db/
-│   │   └── DBConnection.java
-│   └── servlets/
-│       ├── LoginServlet.java
-│       ├── LogoutServlet.java
-│       ├── RegisterServlet.java
-│       ├── ProfileServlet.java
-│       ├── EventServlet.java
-│       ├── SignupServlet.java
-│       ├── MyEventsServlet.java
-│       ├── AttendeesServlet.java
-│       ├── ConnectionServlet.java
-│       ├── SkillSearchServlet.java
-│       ├── NotificationServlet.java
-│       ├── AdminDashboardServlet.java
-│       └── AdminActionServlet.java
-├── src/main/webapp/
-│   ├── index.jsp
-│   ├── login.jsp
-│   ├── register.jsp
-│   ├── events.jsp
-│   ├── my-events.jsp
-│   ├── attendees.jsp
-│   ├── people.jsp
-│   ├── profile.jsp
-│   ├── notifications.jsp
-│   ├── admin.jsp
-│   └── WEB-INF/
-│       └── web.xml
-├── schema.sql
+Campus_Connect_Team_1/
+├── src/
+│   └── main/
+│       ├── java/
+│       │   ├── db/
+│       │   │   └── DBConnection.java
+│       │   ├── servlets/
+│       │   │   ├── AdminActionServlet.java
+│       │   │   ├── AdminDashboardServlet.java
+│       │   │   ├── Attendee.java
+│       │   │   ├── AttendeesServlet.java
+│       │   │   ├── ConnectionServlet.java
+│       │   │   ├── EventServlet.java
+│       │   │   ├── LoginServlet.java
+│       │   │   ├── LogoutServlet.java
+│       │   │   ├── MyEventsServlet.java
+│       │   │   ├── NotificationServlet.java
+│       │   │   ├── ProfileServlet.java
+│       │   │   ├── RegisterServlet.java
+│       │   │   ├── SignupServlet.java
+│       │   │   └── SkillSearchServlet.java
+│       │   └── util/
+│       │       └── HtmlUtil.java
+│       └── webapp/
+│           ├── WEB-INF/
+│           │   └── web.xml
+│           ├── css/
+│           │   └── style.css
+│           ├── images/
+│           │   ├── sjsu-mark.svg
+│           │   └── sjsu.png
+│           ├── admin.jsp
+│           ├── attendees.jsp
+│           ├── events.jsp
+│           ├── index.jsp
+│           ├── login.jsp
+│           ├── my-events.jsp
+│           ├── notifications.jsp
+│           ├── organizer-attendees.jsp
+│           ├── people.jsp
+│           ├── profile.jsp
+│           └── register.jsp
+├── .gitignore
+├── fr6_fr8_fr9_tables.sql
 ├── pom.xml
-└── README.md
+├── README.md
+├── requirements.txt
+└── schema.sql
 ```
 
 ---
