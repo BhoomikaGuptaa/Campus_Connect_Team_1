@@ -1,88 +1,102 @@
-# CampusConnect
+# Campus Connect
 
 CS157A Database Management Systems — Team 1 Project
 
-An event-based collaboration platform for SJSU students to browse and sign up for campus events, manage their profile and skills, and connect with other attendees.
+Campus Connect is a web-based platform for SJSU students to discover and sign up for campus events, manage profiles and skills, search for other students, and connect with attendees.
 
-**Team 1**
+## Team 1
+
 - Bhoomika Gupta (Team Lead) — bhoomika.gupta@sjsu.edu
 - Frank Lin — frank.lin02@sjsu.edu
 - Brandon Phan — brandon.phan@sjsu.edu
-
-This build uses **jakarta.servlet** and is compatible with **Apache Tomcat 10/11**.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | HTML, CSS, JavaScript |
-| Backend | Java Servlets + JSP (Jakarta Servlet 6.0, JSP 3.1) |
-| Web/App Server | Apache Tomcat 10 or 11 |
-| Database | MySQL Community Server 8.x |
-| Build Tool | Maven |
-| Password Hashing | jBCrypt |
+- HTML, CSS, JavaScript
+- JSP and Java Servlets
+- Apache Tomcat 10/11
+- MySQL
+- Maven
+- BCrypt / jBCrypt
 
 ---
 
-## What's Implemented So Far
+## Functional Requirements
 
-This build completes five proposal requirements:
+1. **FR1 — User Authentication**  
+   Registration, login/logout, SJSU email validation, password hashing, and inactive-account checks.
 
-1. **FR1 — User Authentication** — student registration, SJSU-email validation, BCrypt password hashing, login/logout, inactive-account check, 30-minute sessions.
-2. **FR2 — Student Profile Management** — edit name, major, graduation year, bio, and skills.
-3. **FR4 — Event Discovery** — browse and filter by keyword, category, exact date, and location; organizer and remaining capacity are shown.
-4. **FR5 — Event Signup + Waitlist** — signup, duplicate prevention, cancellation, automatic waitlist promotion, position renumbering, and complete signup history.
-5. **FR7 — Skill-Based Search** — browse students and filter public profiles by skill.
+2. **FR2 — Student Profile Management**  
+   Students can update their name, major, graduation year, bio, and skills.
 
-Everything else (connections, activity logs, admin tools, notifications) is planned for upcoming milestones.
+3. **FR3 — Event Management**  
+   Event Organizers can create, edit, cancel, and view attendees for their own events.
+
+4. **FR4 — Event Discovery**  
+   Students can browse and filter events by keyword, category, date, and location.
+
+5. **FR5 — Event Signup and Waitlist**  
+   Students can register, join a waitlist when an event is full, cancel, and automatically promote the next waitlisted student.
+
+6. **FR6 — Connection Requests**  
+   Students attending the same event can send, accept, or decline connection requests.
+
+7. **FR7 — Skill-Based Search**  
+   Students can search for other students by skill and optionally filter by event.
+
+8. **FR8 — Notifications**  
+   Users can view notifications and mark them as read.
+
+9. **FR9 — Administrator Functions**  
+   Administrators can approve organizer requests, suspend/reactivate users, manage categories, and view activity logs.
 
 ---
-## Project Structure
 
-```text
-CampusConnect/
-├── src/main/java/
-│   ├── db/
-│   │   └── DBConnection.java       # shared DB connection helper (reads credentials from env vars)
-│   └── servlets/
-│       ├── LoginServlet.java
-│       ├── LogoutServlet.java
-│       ├── RegisterServlet.java
-│       ├── SignupServlet.java      # event signup + cancel + waitlist logic
-│       ├── ProfileServlet.java     # FR2
-│       └── SkillSearchServlet.java # FR7
-├── src/main/webapp/
-│   ├── index.jsp                   # public homepage — upcoming-event banners only
-│   ├── events.jsp                  # full event listing, search/filter, signup (login required)
-│   ├── login.jsp
-│   ├── register.jsp
-│   ├── profile.jsp
-│   ├── my-events.jsp
-│   ├── people.jsp                  # skill-based student search
-│   └── WEB-INF/web.xml
-├── schema.sql                      # run this in MySQL Workbench first
-├── pom.xml
-└── README.md
-```
+## Database
+
+The project uses a MySQL database named `campus_connect`.
+
+The final database contains 13 tables:
+
+- Users
+- Students
+- EventOrganizer
+- Administrator
+- Categories
+- Skills
+- HasSkill
+- Events
+- Signups
+- Connections
+- OrganizerRequests
+- ActivityLogs
+- Notifications
+
+Each final table contains at least 10 rows for the project demonstration and MySQL Workbench screenshots.
 
 ---
 
 ## Prerequisites
 
-- JDK 17 or newer (`java -version`)
-- Maven 3.9+ (`mvn -version`)
+- JDK 17 or newer
+- Maven 3.9+
 - MySQL Community Server 8+
+- MySQL Workbench
 - Apache Tomcat 10 or 11
 
 ---
 
 ## Database Setup
 
-1. Open **MySQL Workbench**.
-2. Open `schema.sql` and run the entire script. This creates the `campus_connect` database and all tables, and seeds demo data.
-3. Set your database credentials as **environment variables** — do not put passwords in Git.
+1. Open MySQL Workbench.
+2. Open `schema.sql`.
+3. Run the entire script.
+4. This creates the `campus_connect` database, all 13 tables, and demo data.
+5. Set the database credentials used by `DBConnection.java`.
+
+Do not put personal database passwords in GitHub.
 
 ---
 
@@ -105,31 +119,47 @@ target/CampusConnect.war
 ## Deploy to Tomcat
 
 1. Stop Tomcat.
-2. Delete any old `CampusConnect.war` and old exploded `CampusConnect/` directory from Tomcat's `webapps` folder.
+2. Delete any old `CampusConnect.war` and `CampusConnect/` folder from `webapps`.
 3. Copy `target/CampusConnect.war` into `webapps`.
 4. Start Tomcat.
-5. Open `http://localhost:8080/CampusConnect/`.
+5. Open:
+
+```text
+http://localhost:8080/CampusConnect/
+```
 
 ---
 
 ## Demo Accounts
 
-All demo passwords are **`Password123!`**
+All demo passwords are:
+
+**`Password123!`**
 
 | Email | Role |
 |---|---|
-| frank.lin02@sjsu.edu  | Student |
 | brandon.phan@sjsu.edu | Student |
-| organizer@sjsu.edu | Event Organizer |
-| admin@sjsu.edu | Administrator |
+| frank.lin02@sjsu.edu | Student |
+| bhoomika.gupta@sjsu.edu | Student |
+| organizer1@sjsu.edu | Event Organizer |
+| admin1@sjsu.edu | Administrator |
 
-The current five-requirement UI focuses on student workflows. Organizer and administrator dashboards remain future work.
-
-You can also register a new student account directly from the site (`register.jsp`) — must use an `@sjsu.edu` email and a password of at least 8 characters.
+A new student can also register using an `@sjsu.edu` email.
 
 ---
 
 ## Suggested Demo Flow
 
-Register a new account → log in → update profile and skills → filter events by category/date/location → join an open event → join a full event to demonstrate waitlisting → open My Events → cancel a registration → search students by skill.
+Student: log in → update profile → browse/filter events → sign up → demonstrate waitlist → cancel signup → search by skill → send connection request → view notifications.
 
+Organizer: log in → create event → edit event → view attendees → cancel event.
+
+Administrator: log in → approve organizer request → suspend/reactivate user → manage categories → view activity logs.
+
+---
+
+## Final Project Note
+
+The final submitted system contains **FR1 through FR9**.
+
+Some earlier FR numbering remain in the GitHub to show work attempted during development. These unfinished features are not part of the final submitted ZIP, database, report, or demo.
