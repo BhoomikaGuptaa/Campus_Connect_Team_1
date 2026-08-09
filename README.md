@@ -74,7 +74,47 @@ The final database contains 13 tables:
 - ActivityLogs
 - Notifications
 
-Each final table contains at least 10 rows for the project demonstration and MySQL Workbench screenshots.
+---
+---
+
+## Project Structure
+
+```text
+CampusConnect/
+├── src/main/java/
+│   ├── db/
+│   │   └── DBConnection.java
+│   └── servlets/
+│       ├── LoginServlet.java
+│       ├── LogoutServlet.java
+│       ├── RegisterServlet.java
+│       ├── ProfileServlet.java
+│       ├── EventServlet.java
+│       ├── SignupServlet.java
+│       ├── MyEventsServlet.java
+│       ├── AttendeesServlet.java
+│       ├── ConnectionServlet.java
+│       ├── SkillSearchServlet.java
+│       ├── NotificationServlet.java
+│       ├── AdminDashboardServlet.java
+│       └── AdminActionServlet.java
+├── src/main/webapp/
+│   ├── index.jsp
+│   ├── login.jsp
+│   ├── register.jsp
+│   ├── events.jsp
+│   ├── my-events.jsp
+│   ├── attendees.jsp
+│   ├── people.jsp
+│   ├── profile.jsp
+│   ├── notifications.jsp
+│   ├── admin.jsp
+│   └── WEB-INF/
+│       └── web.xml
+├── schema.sql
+├── pom.xml
+└── README.md
+```
 
 ---
 
